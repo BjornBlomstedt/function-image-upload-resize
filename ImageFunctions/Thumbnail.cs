@@ -79,6 +79,7 @@ namespace ImageFunctions
         {
             try
             {
+                log.LogInformation($"Thumbnail function started...");
                 if (input != null)
                 {
                     var createdEvent = ((JObject)eventGridEvent.Data).ToObject<StorageBlobCreatedEventData>();
@@ -95,11 +96,16 @@ namespace ImageFunctions
                         var blobName = GetBlobNameFromUrl(createdEvent.Url);
                         var blockBlob = container.GetBlockBlobReference(blobName);
 
+                        log.LogInformation($"Storage account: {storageAccount}");
+                        log.LogInformation($"blobName: {blobName}");
+
                         using (var output = new MemoryStream())
                         using (Image<Rgba32> image = Image.Load(input))
                         {
                             var divisor = image.Width / thumbnailWidth;
                             var height = Convert.ToInt32(Math.Round((decimal)(image.Height / divisor)));
+
+                            log.LogInformation($"Height: {height}");
 
                             image.Mutate(x => x.Resize(thumbnailWidth, height));
                             image.Save(output, encoder);
@@ -111,6 +117,7 @@ namespace ImageFunctions
                     {
                         log.LogInformation($"No encoder support for: {createdEvent.Url}");
                     }
+                    log.LogInformation($"Thumbnail function ended...");
                 }
             }
             catch (Exception ex)
